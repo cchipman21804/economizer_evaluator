@@ -172,7 +172,7 @@ with open(lookupTableFileName,'r', newline='') as lookupTable:
 # outdoorDBTemp = float(t)
 #
 print(f" *** Weather observations for [{header}]:")
-print(f"{localDate} {localTime}")
+print(f"{localDate} @{localTime}")
 # print(f"{localTime}")
 print(f"{temperature}")
 print(f"Wind Direction: {windDir} degrees")
