@@ -34,17 +34,20 @@
 #
 from os import path
 import csv
+import math
 import urllib.request
 #
 
-print("ECONOMIZER CONTROL WEATHER CONDITIONS EVALUATOR v1.0\n")
+print("ECONOMIZER CONTROL WEATHER CONDITIONS EVALUATOR v1.2\n")
 #
 # URL for current weather observations
 rooturl = "http://tgftp.nws.noaa.gov/data/observations/metar/decoded/"
 #
 # Concatenate rooturl and airport code to obtain full url for decoded current weather observations
 ksby = "KSBY.TXT"
-url = rooturl + ksby
+kged = "KGED.TXT"
+k33n = "K33N.TXT"
+url = rooturl + k33n
 #
 # Retrieve current weather observations from KSBY
 print(" *** Retrieving decoded weather observation data from noaa.gov - ")
@@ -73,9 +76,17 @@ localTimeEndIdx = wxdata.find("EDT") + 3
 localTime = wxdata[localTimeStartIdx:localTimeEndIdx]
 
 # Wind Speed:
-windSpeedStartIdx = wxdata.find("Wind: ")
-windSpeedEndIdx = wxdata.find("Visibility: ") - 4
-windSpeed = wxdata[windSpeedStartIdx:windSpeedEndIdx]
+windStartIdx = wxdata.find("Wind: ")
+windEndIdx = wxdata.find("Visibility: ") - 4
+wind = wxdata[windStartIdx:windEndIdx]
+windSpeedStartIdx = wxdata.find("ob: ") + 25
+windSpeedEndIdx = wxdata.find("ob: ") + 27
+windSpeedKnots = wxdata[windSpeedStartIdx:windSpeedEndIdx]
+windSpeedMph = round(float(windSpeedKnots) / 0.868976)
+windSpeedFpm = float(windSpeedKnots) * 101.27
+windDirStartIdx = wxdata.find("ob: ") + 22
+windDirEndIdx =  wxdata.find("ob: ") + 25
+windDir = wxdata[windDirStartIdx:windDirEndIdx]
 
 # Visibility:
 visibilityStartIdx = wxdata.find("Visibility: ")
@@ -125,7 +136,11 @@ print(" *** Parsing outdoor weather data - ")
 # print(f"{header}")
 # print(f"{localDate}")
 # print(f"{localTime}")
-# print(f"{windSpeed}")
+# print(f"{wind}")
+# print(f"{windDir} degrees")
+# print(f"{windSpeedKnots} KT")
+# print(f"{windSpeedMph} MPH")
+# print(f"{windSpeedFpm} FPM")
 # print(f"{visibility}")
 # print(f"{skyCondx}")
 # print(f"{temperature}")
@@ -137,7 +152,7 @@ print(" *** Parsing outdoor weather data - ")
 #
 
 # humidityratio CSV formatted lookup table
-lookupTablePath = "insert path here"
+lookupTablePath = "./"
 lookupTableFileName = lookupTablePath + "humidityratio.csv"
 if not path.exists(lookupTableFileName):
     print(" *** FATAL ERROR: The humidity ratio lookup table file does not exist.")
@@ -156,13 +171,19 @@ with open(lookupTableFileName,'r', newline='') as lookupTable:
 # t = input("Enter outdoor dry bulb temperature")
 # outdoorDBTemp = float(t)
 #
-print(f" *** Weather observations for {header}:")
-print(f"{localDate}")
-print(f"{localTime}")
+print(f" *** Weather observations for [{header}]:")
+print(f"{localDate} {localTime}")
+# print(f"{localTime}")
 print(f"{temperature}")
+print(f"Wind Direction: {windDir} degrees")
+print(f"Wind Speed: {windSpeedMph} MPH")
+# print(f"{windSpeedFpm} FPM")
+#
+# Convert wind direction string to float for calculations
+windDir = float(windDir)
 #
 # Convert temperature substring to float for calculations
-outdoorDBTemp = float(temperature[13:17])
+outdoorDBTemp = float(temperature[13:16])
 #
 # Round temperature float to zero decimal places & convert to string for dictionary key
 outdoorDBTempRoundedKey = str(round(outdoorDBTemp))
@@ -225,7 +246,10 @@ rhIndoor = rhIndoor/100
 #
 # Look up saturation specific humidity of indoor dry bulb temperature in dictionary
 # Multiply the saturation specific humidity by the relative humidity to obtain the specific humidity
-x = float(dbTempSatTable[t]) * rhIndoor
+# try:
+x = float(dbTempSatTable[str(indoorDBTemp)]) * rhIndoor
+# except KeyError:
+#     indoorDBTemp = indoorDBTemp + 1
 #
 # convert from gr/LB to LB/LB for enthalpy formula
 x = x/7000
@@ -248,23 +272,82 @@ print("\n")
 # m = mass flow rate of substance in lb/hr
 # (h2-h1) = change in enthalpy of substance in BTU/lb
 #
+#validInput = False
+#while validInput == False:
+#    m = input("Enter blower air flow rate (CFM): ")
+#    try:
+#        m = float(m)
+#        if m > 0:
+#            validInput = True
+#        else:
+#            print("\n *** Air flow rate must be greater than zero.\n")
+#    except ValueError:
+#        print("\n *** Air flow rate must be a number greater than zero.\n")
+#
+# Obtain window opening dimensions in inches
 validInput = False
 while validInput == False:
-    m = input("Enter blower air flow rate (CFM): ")
+    windowWidthInches = input("Enter window opening width in inches ( >=20 & <= 60 ): ")
     try:
-        m = float(m)
-        if m > 0:
-            validInput = True
+        windowWidthInches = float(windowWidthInches)
+        if windowWidthInches < 20:
+            print("Window width must be greater than or equal to 20 inches.\n")
+        elif windowWidthInches > 60:
+            print("Window width must be less than or equal to 60 inches.\n")
         else:
-            print("\n *** Air flow rate must be greater than zero.\n")
-    except ValueError:
-        print("\n *** Air flow rate must be a number greater than zero.\n")
+            windowWidthFeet = windowWidthInches / 12 # convert inches to feet
+            validInput = True
+    except:
+        print("Window width must be from 20 - 60 inches.\n")
+#
+validInput = False
+while validInput == False:
+    windowHeightInches = input("Enter window opening height in inches ( >=1 & <= 30 ): ")
+    try:
+        windowHeightInches = float(windowHeightInches)
+        if windowHeightInches < 1:
+            print("Window height must be greater than or equal to 1 inch.\n")
+        elif windowHeightInches > 30:
+            print("Window height must be less than or equal to 30 inches.\n")
+        else:
+            windowHeightFeet = windowHeightInches / 12 # convert inches to feet
+            validInput = True
+    except:
+        print("Window height must be from 1 - 30 inches.\n")
+#
+# Obtain window opening area in sqft
+windowOpeningArea = windowWidthFeet * windowHeightFeet
+#
+# Obtain window facing direction in compass degrees
+validInput = False
+while validInput == False:
+    windowOpeningDir = input("Enter compass direction (in degrees from True North) of window opening (0 - 359): ")
+    try:
+        windowOpeningDir = float(windowOpeningDir)
+        if windowOpeningDir < 0 or windowOpeningDir > 359:
+            print("\n")
+        else:
+            validInput = True
+    except:
+        print("\n")
+#
+# Obtain air flow through window (in CFM) from outdoor wind speed & direction
+# relative to window opening direction & dimensions
+#
+windDirOffset = abs(windDir - windowOpeningDir)
+#
+if windDirOffset >= 90:
+      massFlowRate = 0 # airMassFlowRate = 0
+else:
+      massFlowRate = windSpeedFpm                                # massFlowRate = windSpeed in fpm
+      massFlowRate = massFlowRate * abs(math.cos(windDirOffset)) # compensate for wind direction relative to window opening direction
+      massFlowRate = massFlowRate * windowOpeningArea            # convert fpm to CFM based on size of window opening (in sqft)
 #
 # Convert CFM to lb/hr
-m = m/4.5
+massFlowRate = massFlowRate / 4.5
 #
 # Calculate heat flow rate in BTU/hr
-Q = m * (IndoorEnthalpy - OutdoorEnthalpy)
+Q = massFlowRate * (IndoorEnthalpy - OutdoorEnthalpy)
 if Q < 0:
     mode = "heating"
     equiv = Q / 3412.14163  # convert to KW
@@ -275,7 +358,7 @@ else:
     unit = "tons of ice"
 #
 # NOTE: Negative values of Q are heating BTUs/hr
-print(f"Activating the economizer will provide {round(Q,2)} BTU/hr of {mode}.")
+print(f"\nActivating the economizer will provide {round(Q,2)} BTU/hr of {mode}.")
 print(f"Equivalent to {round(equiv,2)} {unit}.\n")
 #
-exit(0)
+# exit(0)
