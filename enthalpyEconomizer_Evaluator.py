@@ -60,6 +60,7 @@ wxdata = str(respdata)
 
 # Find constant strings in observational weather data text and obtain index numbers to extract substrings
 
+# Obtain indices for:
 # Observation Date Stamp:
 localDateStartIdx = wxdata.find("EDT") - 24
 localDateEndIdx = wxdata.find("EDT") - 12
@@ -120,7 +121,6 @@ pressureStartIdx = wxdata.find("Pressure (altimeter): ")
 pressureEndIdx = wxdata.find(" hPa)") + 5
 pressure = wxdata[pressureStartIdx:pressureEndIdx]
 
-# Obtain indices for:
 # Pressure tendency:
 pressureTendencyStartIdx = wxdata.find("Pressure tendency: ")
 pressureTendencyEndIdx = wxdata.find("ob: ") - 2
@@ -204,7 +204,7 @@ rhOutdoor = rhOutdoor/100
 #
 # x = input("Enter outdoor humidity ratio")
 x = float(dbTempSatTable[outdoorDBTempRoundedKey]) * rhOutdoor
-x = float(x)/7000  # convert from gr/LB to LB/LB
+x = x / 7000  # convert from gr/LB to LB/LB
 #
 OutdoorEnthalpy = (0.240 * outdoorDBTemp) + x * (0.444 * outdoorDBTemp + 1061)
 print(f"\n *** Outdoor Enthalpy: {round(OutdoorEnthalpy,1)} BTU per lb of dry air\n")
@@ -220,9 +220,9 @@ while validInput == False:
         if indoorDBTemp > 29 & indoorDBTemp < 88:
             validInput = True
         else:
-            print("\n *** Temperature must be between 30 & 87 degrees.\n")
+            print("\n *** Temperature must be between 30 & 87 degrees (inclusive).\n")
     except ValueError:
-        print("\n *** Temperature must be a number rounded to the nearest whole degree.\n")
+        print("\n *** Temperature must be a number rounded to the nearest whole degree. ***\n")
 #
 # Uncomment to debug:
 # print(f"Saturated Specific Humidity: {dbTempSatTable[t]} gr/LB")
@@ -235,9 +235,9 @@ while validInput == False:
         if rhIndoor >= 0 & rhIndoor <= 100:
             validInput = True
         else:
-            print("\n *** Relative Humidity must be between 0 & 100.\n")
+            print("\n *** Relative Humidity must be between 0 & 100 (inclusive).\n")
     except ValueError:
-        print("\n *** Relative Humidity must be a number.\n")
+        print("\n *** Relative Humidity must be a number. ***\n")
 #
 # Convert percentage to decimal
 rhIndoor = rhIndoor/100
