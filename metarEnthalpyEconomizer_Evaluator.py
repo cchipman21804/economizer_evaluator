@@ -62,7 +62,8 @@ if not os.path.exists(lookupTableFileName):
     print(" *** Returning to operating system with errorlevel 1.")
     exit(1)
 # else: print(" *** Humidity ratio lookup table file found - loading contents into memory - ***")
-
+#
+# Create a dictionary of temperatures in degF with corresponding saturated humidity ratios in grains per pound
 dbTempSatTable = {}
 with open(lookupTableFileName,'r', newline='') as lookupTable:
     reader = csv.reader(lookupTable)
