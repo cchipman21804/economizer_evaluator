@@ -37,11 +37,21 @@ import csv
 import math
 import urllib.request
 #
-
-print("ECONOMIZER CONTROL WEATHER CONDITIONS EVALUATOR v1.3\n")
+def getweather(url):
+# Retrieve current weather observations from airport weather data URL
+    req = urllib.request.Request(url)
+    try:
+        resp = urllib.request.urlopen(req)
+    except:
+        print(f"\n *** Error... WEATHER STATION [{airport}] NOT FOUND ***")
+        return None
+    respdata = resp.read()
+    return str(respdata)
+#
+print("ECONOMIZER CONTROL WEATHER CONDITIONS EVALUATOR v1.3.1\n")
 #
 # URL for current weather observations
-# rooturl = "http://tgftp.nws.noaa.gov/data/observations/metar/decoded/"
+# rooturl = "https://tgftp.nws.noaa.gov/data/observations/metar/decoded/"
 rooturl = "https://tgftp.nws.noaa.gov/data/observations/metar/stations/"
 #
 # Concatenate rooturl and airport code to obtain full url for decoded current weather observations
@@ -53,12 +63,13 @@ kilg = "KILG.TXT" # New Castle County Airport, New Castle, DE
 kcge = "KCGE.TXT" # Cambridge-Dorchester Regional Airport, Cambridge, MD
 koxb = "KOXB.TXT" # Ocean City Municipal Airport, Ocean City, MD
 kwal = "KWAL.TXT" # Wallops Island Flight Facility, Wallops Island, VA
+kesn = "KESN.TXT" # Easton Airport/Newman Field, Easton, MD
 #
 # humidityratio CSV formatted lookup table
 lookupTablePath = "./"
 lookupTableFileName = lookupTablePath + "humidityratio.csv"
 if not os.path.exists(lookupTableFileName):
-    print(" *** FATAL ERROR: The humidity ratio lookup table CSV file does not exist... ***")
+    print("\n *** FATAL ERROR: The humidity ratio lookup table CSV file does not exist... ***")
     print(" *** Returning to operating system with errorlevel 1.")
     exit(1)
 # else: print(" *** Humidity ratio lookup table file found - loading contents into memory - ***")
@@ -75,50 +86,82 @@ with open(lookupTableFileName,'r', newline='') as lookupTable:
 # Prepare menu selection loop
 validInput = False
 while validInput == False:
-    print("\nLOCAL WEATHER OBSERVATIONS\n")
-    print("1 ... Delaware Coastal Airport, Georgetown, Sussex County, DE")
-    print("2 ... Wicomico Regional Airport, Salisbury, Wicomico County, MD")
-    print("3 ... Wallops Flight Facility, Wallops Island, Accomac County, VA")
-    print("4 ... Ocean City Municipal Airport, Ocean City, Worcester County, MD")
-    print("5 ... Dover Air Force Base, Dover, Kent County, DE")
-    print("6 ... New Castle County Airport, New Castle, New Castle County, DE")
-    print("7 ... Delaware Airpark, Smyrna, Kent County, DE")
-    print("8 ... Cambridge Dorchester Regional Airport, Cambridge, Dorchester County, MD")
-    #    print("n ... Ocean City Municipal Airport, Ocean City, Worcester County, MD")
-    airport = input("\nPlease select an area wx forecast or 'e' to EXIT: ")
+    print("\nLOCAL WEATHER OBSERVATION STATIONS\n")
+    print("1 ... [KGED] Delaware Coastal Airport, Georgetown, Sussex County, DE")
+    print("2 ... [KSBY] Wicomico Regional Airport, Salisbury, Wicomico County, MD")
+    print("3 ... [KWAL] Wallops Flight Facility, Wallops Island, Accomac County, VA")
+    print("4 ... [KOXB] Ocean City Municipal Airport, Ocean City, Worcester County, MD")
+    print("5 ... [KDOV] Dover Air Force Base, Dover, Kent County, DE")
+    print("6 ... [KILG] New Castle County Airport, New Castle, New Castle County, DE")
+    print("7 ... [K33N] Delaware Airpark, Smyrna, Kent County, DE")
+    print("8 ... [KCGE] Cambridge Dorchester Regional Airport, Cambridge, Dorchester County, MD")
+    print("9 ... [KESN] Easton Airport/Newman Field, Easton, Talbot County, MD")
+#    print("n ... [KOXB] Ocean City Municipal Airport, Ocean City, Worcester County, MD")
+    airport = input("\nPlease select a weather station or 'e' to EXIT: ")
 
 # Evaluate menu selection
     if airport == '1':
-        url = rooturl + kged
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + kged)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '2':
-        url = rooturl + ksby
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + ksby)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '3':
-        url = rooturl + kwal
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + kwal)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '4':
-        url = rooturl + koxb
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + koxb)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '5':
-        url = rooturl + kdov
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + kdov)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '6':
-        url = rooturl + kilg
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + kilg)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '7':
-        url = rooturl + k33n
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + k33n)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
 
     elif airport == '8':
-        url = rooturl + kcge
-        validInput = True  # leave while loop
+        wxdata = getweather(rooturl + kcge)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
+
+    elif airport == '9':
+        wxdata = getweather(rooturl + kesn)
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
         
 #    elif airport == 'n':
 #       url = xxxxurl
@@ -129,21 +172,24 @@ while validInput == False:
         print("\n")
         exit(0)
 
+    elif len(airport) == 4:
+        wxdata = getweather(rooturl + airport.upper() + '.TXT')
+        if wxdata == None:
+            validInput = False
+        else:
+            validInput = True  # leave while loop
+        
     else: validInput = False
 #
-# Retrieve current weather observations from airport weather data URL
-req = urllib.request.Request(url)
-resp = urllib.request.urlopen(req)
-respdata = resp.read()
-wxdata = str(respdata)
+#wxdata = str(respdata)
 #
 # Uncomment wxdata to debug:
 # print("\n")
-print(f" *** Retrieved {len(wxdata)} bytes from {url} - ")
+print(f"\n *** Retrieved {len(wxdata)} bytes from {rooturl} - \n")
 print(wxdata)
 # print("\n")
 #
-print(" *** Parsing outdoor weather data - ")
+print("\n *** Parsing outdoor weather data - \n")
 #
 # Date/Time Stamp:
 year = wxdata[2:6]
@@ -158,21 +204,43 @@ header = wxdata[20:24]
 print(f"Location: {header}")
 #
 # Temperature:
-temperatureStartIdx = wxdata.find(" RMK ") - 11
-temperatureEndIdx = wxdata.find(" RMK ") - 9
+#if 'RMK' in wxdata:
+#    temperatureStartIdx = wxdata.find(" RMK ") - 11
+#    temperatureEndIdx = wxdata.find(" RMK ") - 9
+#else:
+#
+# Find last '/' in wxdata if 'RMK' not found
+temperatureStartIdx = wxdata.rindex('/') - 2
+temperatureEndIdx = wxdata.rindex('/')
 degC = wxdata[temperatureStartIdx:temperatureEndIdx]
+#
 # Convert to degrees Fahrenheit
-outdoorDBTemp = 9/5*float(degC)+32
+try:
+    outdoorDBTemp = 9/5*float(degC)+32
+except:
+    print(f"\n *** Error... Invalid weather data [{degC}] ***")
+    exit(1)
 print(f"Dry Bulb Temperature: {degC} degrees Celsius ({round(outdoorDBTemp,1)} degrees Fahrenheit)")
 # Round temperature float to zero decimal places & convert to string for dictionary key
 outdoorDBTempKey = str(round(outdoorDBTemp))
 #
 # Dew Point:
-dewPointStartIdx = wxdata.find(" RMK ") - 8
-dewPointEndIdx = wxdata.find(" RMK ") - 6
+#if 'RMK' in wxdata:
+#    dewPointStartIdx = wxdata.find(" RMK ") - 8
+#    dewPointEndIdx = wxdata.find(" RMK ") - 6
+#else:
+#
+# Find last '/' in wxdata if 'RMK' not found
+dewPointStartIdx = wxdata.rindex('/') + 1
+dewPointEndIdx = wxdata.rindex('/') + 3
 outdoorDewPointC = wxdata[dewPointStartIdx:dewPointEndIdx]
+#
 # Convert to degrees Fahrenheit
-dewPoint = 9/5*float(outdoorDewPointC)+32
+try:
+    dewPoint = 9/5*float(outdoorDewPointC)+32
+except:
+    print("\n *** Error... Invalid weather data [{outdoorDewPointC}] ***")
+    exit(1)
 print(f"Dew Point: {outdoorDewPointC} degrees Celsius ({round(dewPoint,1)} degrees Fahrenheit)")
 # Round temperature float to zero decimal places & convert to string for dictionary key
 outdoorDewPointKey = str(round(dewPoint))
@@ -197,11 +265,11 @@ else:
 windSpeedMph = round(windSpeedKnots / 0.868976)
 print(f"Wind: {windDir} degrees @{windSpeedKnots} Knots ({windSpeedMph} MPH)")
 if windDir == 'VRB':
-    print("*** Wind is too variable for effective economizer operation...\n")
+    print("\n *** Wind is too variable --- ineffective for economizer operation...\n")
     exit(0)
 #
 if windSpeedKnots == 0:
-    print("*** Wind is calm --- ineffective for economizer operation...\n")
+    print("\n *** Wind is calm --- ineffective for economizer operation...\n")
     exit(0)
 #
 # Convert wind direction to float for energy calculations
@@ -237,7 +305,7 @@ while validInput == False:
         if indoorDBTemp >= 0 & indoorDBTemp <= 120:
             validInput = True
         else:
-            print("\n *** Temperature must be between 0 & 120 degrees (inclusive).\n")
+            print("\n *** Temperature must be between 0 & 120 degrees (inclusive). ***\n")
     except ValueError:
         print("\n *** Temperature must be a number within the specified limits. ***\n")
 #
@@ -252,7 +320,7 @@ while validInput == False:
         if rhIndoor >= 0 & rhIndoor <= 100:
             validInput = True
         else:
-            print("\n *** Relative Humidity must be between 0 & 100 (inclusive).\n")
+            print("\n *** Relative Humidity must be between 0 & 100 (inclusive). ***\n")
     except ValueError:
         print("\n *** Relative Humidity must be a number within the specified limits. ***\n")
 #
@@ -279,9 +347,9 @@ while validInput == False:
     try:
         windowWidthInches = float(windowWidthInches)
         if windowWidthInches < 20:
-            print("Window width must be greater than or equal to 20 inches.\n")
+            print("\n *** Window width must be greater than or equal to 20 inches. ***\n")
         elif windowWidthInches > 60:
-            print("Window width must be less than or equal to 60 inches.\n")
+            print("\n *** Window width must be less than or equal to 60 inches. ***\n")
         else:
             windowWidthFeet = windowWidthInches / 12 # convert inches to feet
             validInput = True
@@ -294,14 +362,14 @@ while validInput == False:
     try:
         windowHeightInches = float(windowHeightInches)
         if windowHeightInches < 1:
-            print("Window height must be greater than or equal to 1 inch.\n")
+            print("\n *** Window height must be greater than or equal to 1 inch. ***\n")
         elif windowHeightInches > 30:
-            print("Window height must be less than or equal to 30 inches.\n")
+            print("\n *** Window height must be less than or equal to 30 inches. ***\n")
         else:
             windowHeightFeet = windowHeightInches / 12 # convert inches to feet
             validInput = True
     except:
-        print("Window height must be from 1 - 30 inches.\n")
+        print("\n *** Window height must be from 1 - 30 inches. ***\n")
 #
 # Obtain quantity of window openings
 validInput = False
@@ -339,6 +407,7 @@ windDirOffset = abs(windDir - windowOpeningDir)
 #
 if windDirOffset >= 90:
       massFlowRate = 0 # airMassFlowRate = 0
+      print("\n *** The wind is blowing from an ineffective direction. ***")
 else:
       massFlowRate = windSpeedFpm                                # massFlowRate = windSpeed in fpm
       massFlowRate = massFlowRate * abs(math.cos(windDirOffset)) # compensate for wind direction relative to window opening direction
@@ -371,7 +440,7 @@ else:
     unit = "tons"
 #
 # NOTE: Negative values of Q are heating BTUs/hr
-print(f"\nOpening the windows will provide {round(Q,2)} BTU/hr of {mode}.")
-print(f"Equivalent to {round(equiv,2)} {unit}.\n")
+print(f"\nOpening the windows will provide {abs(round(Q,2))} BTU/hr of {mode}.")
+print(f"Equivalent to {abs(round(equiv,2))} {unit}.\n")
 #
 # exit(0)
