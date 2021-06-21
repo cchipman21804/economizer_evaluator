@@ -291,6 +291,7 @@ while not gust == '':
         break # Just ignore errors & move on -- gust values are for display only...
     gustMph = round(gustKnots / 0.868976)
     print(f"Gusting to {gustKnots} Knots ({gustMph} MPH)")
+    gust = '' # STOP THE LOOP!!!
 #
 # Convert wind speed to feet per minute for energy calculations
 windSpeedFpm = windSpeedKnots * 101.27
