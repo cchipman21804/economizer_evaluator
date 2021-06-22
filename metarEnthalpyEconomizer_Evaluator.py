@@ -276,10 +276,6 @@ except:
     print(" *** Returning to operating system with errorlevel 2.")
     exit(2)
 #
-if windSpeedKnots == 0:
-    print("\n *** Wind is calm --- ineffective for economizer operation...\n")
-    exit(0)
-#
 # Convert wind speed to MPH for display
 windSpeedMph = round(windSpeedKnots / 0.868976)
 #
@@ -305,6 +301,10 @@ x = x / 7000
 # Calculate enthalpy of outdoor air
 OutdoorEnthalpy = (0.240 * outdoorDBTemp) + x * (0.444 * outdoorDBTemp + 1061)
 print(f"\n *** Outdoor Enthalpy: {round(OutdoorEnthalpy,1)} BTU per lb of dry air\n")
+#
+if windSpeedKnots == 0:
+    print("\n *** Wind is calm --- ineffective for economizer operation...\n")
+    exit(0)
 #
 # Calculate indoor humidity ratio from indoor relative humidity and dry bulb temperature saturation lookup table
 #
